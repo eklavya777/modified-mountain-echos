@@ -161,6 +161,39 @@ const ChatPage = () => {
         }
     };
 
+    // Function to format last seen timestamp
+    const formatLastSeen = (timestamp) => {
+        if (!timestamp) return 'Unknown';
+        
+        // Convert Firebase timestamp to JavaScript Date
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+        
+        // Format based on how long ago
+        if (diffSec < 60) {
+            return 'Just now';
+        } else if (diffMin < 60) {
+            return `${diffMin} ${diffMin === 1 ? 'minute' : 'minutes'} ago`;
+        } else if (diffHour < 24) {
+            return `${diffHour} ${diffHour === 1 ? 'hour' : 'hours'} ago`;
+        } else if (diffDay < 7) {
+            return `${diffDay} ${diffDay === 1 ? 'day' : 'days'} ago`;
+        } else {
+            // Format as date for older timestamps
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+    };
+
     // Function to update user presence
     const updateUserPresence = async () => {
         if (!yourName || !roomId) return;
@@ -366,7 +399,14 @@ const ChatPage = () => {
                             users.map((user, index) => (
                                 <li key={index} className={`user-item ${user.name === yourName ? 'current-user' : ''}`}>
                                     <div className={`status-indicator ${user.online ? 'online' : 'offline'}`}></div>
-                                    <span className="user-name">{user.name}</span>
+                                    <div className="user-info">
+                                        <span className="user-name">{user.name}</span>
+                                        {!user.online && user.lastSeen && (
+                                            <span className="last-seen">
+                                                Last seen: {formatLastSeen(user.lastSeen)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </li>
                             ))
                         )}
